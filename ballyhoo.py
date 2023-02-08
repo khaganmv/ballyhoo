@@ -1,7 +1,6 @@
-import tkinter as tk
 import customtkinter as ctk
 import json
-
+from PIL import Image
 
 class Task():
     def __init__(self, master, completed, title):
@@ -22,6 +21,23 @@ class Task():
             placeholder_text_color=('black', 'white')
         )
         
+        im_width = im_height = 24
+        im = Image.open('resources/remove.png')
+        self.button = ctk.CTkButton(
+            master=master,
+            width=im_width,
+            height=im_height,
+            fg_color='transparent',
+            text=None,
+            image=ctk.CTkImage(im, im, size=(im_width, im_height)),
+            command=lambda task=self: master.remove_task(self)
+        )
+    
+    def destroy(self):
+        self.checkbox.destroy()
+        self.entry.destroy()
+        self.button.destroy()
+    
     def serialize(self):
         return { 'completed': self.checkbox.get(), 'title': self.entry.get() }
         
@@ -33,7 +49,6 @@ class TaskList(ctk.CTkScrollableFrame):
         self.tasks = self.read_tasks()
         
         self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
         
         self.update_task_list()
@@ -61,6 +76,13 @@ class TaskList(ctk.CTkScrollableFrame):
         self.tasks.append(task)
         self.write_tasks()
     
+    def remove_task(self, task):
+        taskid = self.tasks.index(task)
+        task.destroy()
+        self.tasks = self.tasks[:taskid] + self.tasks[taskid + 1:]
+        self.update_task_list()
+        self.write_tasks()
+    
     def add_to_task_list(self, task, rowid):
         task.checkbox.grid(row=rowid, column=0)
         
@@ -71,6 +93,8 @@ class TaskList(ctk.CTkScrollableFrame):
             pady=(4, 0), 
             sticky='ew'
         )
+        
+        task.button.grid(row=rowid, column=2)
     
     def update_task_list(self):
         for i, task in enumerate(self.tasks):
@@ -132,9 +156,9 @@ class Ballyhoo(ctk.CTk):
         text = self.uif.get()
         if text:
             self.tl.add_task(text)
-            self.uif.delete(0, tk.END)
+            self.uif.delete(0, ctk.END)
 
     def select_all(self, master):
-        self.uif.select_range(0, tk.END)
-        self.uif.icursor(tk.END)
+        self.uif.select_range(0, ctk.END)
+        self.uif.icursor(ctk.END)
         return 'break'
