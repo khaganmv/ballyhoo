@@ -4,6 +4,9 @@ from PIL import Image
 
 class Task():
     def __init__(self, master, completed, title):
+        self.master = master
+        
+        # configure checkbox
         iv = ctk.IntVar(master, completed)
         iv.trace_add('write', master.write_tasks)
         self.checkbox = ctk.CTkCheckBox(
@@ -13,6 +16,7 @@ class Task():
             variable=iv
         )
         
+        # configure entry
         sv = ctk.StringVar(master, title)
         sv.trace_add('write', master.write_tasks)
         self.entry = ctk.CTkEntry(
@@ -20,7 +24,20 @@ class Task():
             textvariable=sv,
             placeholder_text_color=('black', 'white')
         )
+        self.entry.bind(
+            sequence='<Control-Key-a>',
+            command=lambda event, widget=self.entry: Ballyhoo.select_all(widget)
+        )
+        self.entry.bind(
+            sequence='<Up>', 
+            command=lambda event, widget=self: self.master.navigate_to_prev(widget)
+        )
+        self.entry.bind(
+            sequence='<Down>', 
+            command=lambda event, widget=self: self.master.navigate_to_next(widget)
+        )
         
+        # configure button
         im_width = im_height = 24
         im = Image.open('resources/remove.png')
         self.button = ctk.CTkButton(
@@ -46,6 +63,7 @@ class TaskList(ctk.CTkScrollableFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
         
+        self.next = None
         self.tasks = self.read_tasks()
         
         self.grid_rowconfigure(0, weight=1)
@@ -99,8 +117,25 @@ class TaskList(ctk.CTkScrollableFrame):
     def update_task_list(self):
         for i, task in enumerate(self.tasks):
             self.add_to_task_list(task, i)
+            
+    def navigate_to_prev(self, task):
+        taskid = self.tasks.index(task)
         
-
+        if taskid:
+            Ballyhoo.shift_focus_from(
+                self.tasks[taskid].entry, 
+                self.tasks[taskid - 1].entry
+            )
+            
+    def navigate_to_next(self, task):
+        taskid = self.tasks.index(task)
+        
+        Ballyhoo.shift_focus_from(
+            self.tasks[taskid].entry,
+            self.next if taskid == len(self.tasks) - 1 else self.tasks[taskid + 1].entry
+        )
+            
+        
 class Ballyhoo(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -135,7 +170,11 @@ class Ballyhoo(ctk.CTk):
         # configure user input field
         self.uif = ctk.CTkEntry(master=self)
         self.uif.bind(sequence='<Return>', command=self.add_task)
-        self.uif.bind(sequence='<Control-Key-a>', command=self.select_all)
+        self.uif.bind(
+            sequence='<Control-Key-a>', 
+            command=lambda event, widget=self.uif: Ballyhoo.select_all(widget)
+        )
+        self.uif.bind(sequence='<Up>', command=self.navigate_to_prev)
         self.uif.grid(
             row=2, 
             column=0, 
@@ -145,6 +184,9 @@ class Ballyhoo(ctk.CTk):
             sticky='ew'
         )
         
+        # store reference to uif in tl for navigation
+        self.tl.next = self.uif
+        
         self.uif.focus()
         
     def toggle_dark_mode(self):
@@ -152,13 +194,23 @@ class Ballyhoo(ctk.CTk):
             'dark' if ctk.get_appearance_mode() == 'Light' else 'light'
         )
     
-    def add_task(self, master):
+    def add_task(self, event):
         text = self.uif.get()
         if text:
             self.tl.add_task(text)
             self.uif.delete(0, ctk.END)
-
-    def select_all(self, master):
-        self.uif.select_range(0, ctk.END)
-        self.uif.icursor(ctk.END)
+    
+    def navigate_to_prev(self, event):
+        Ballyhoo.shift_focus_from(self.uif, self.tl.tasks[-1].entry)
+    
+    @staticmethod
+    def select_all(widget):
+        widget.select_range(0, ctk.END)
+        widget.icursor(ctk.END)
         return 'break'
+        
+    @staticmethod
+    def shift_focus_from(src, dst):
+        src.selection_clear()
+        dst.focus()
+        dst.icursor(ctk.END)
