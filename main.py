@@ -2,6 +2,7 @@ from ballyhoo import Ballyhoo
 
 
 def main():
+    open('tasks.json', 'a').close()
     bh = Ballyhoo()
     bh.mainloop()
     
