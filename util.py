@@ -1,5 +1,6 @@
 import customtkinter as ctk
 
+
 class Util():
     @staticmethod
     def select_all(widget):

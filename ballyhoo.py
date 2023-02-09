@@ -5,6 +5,7 @@ import customtkinter as ctk
 import json
 from PIL import Image
 
+
 class Task():
     def __init__(self, master, completed, title):
         self.master = master
@@ -109,9 +110,9 @@ class TaskList(ctk.CTkScrollableFrame):
         task = Task(self, completed=False, title=text)
         self.add_to_task_list(task, len(self.at))
         self.at.append(task)
-        self.write_tasks()
-        if len(self.ct):
+        if self.sc and len(self.ct):
             self.update_task_list()
+        self.write_tasks()
     
     def move_task(self, task):
         if task.checkbox.get():
@@ -158,7 +159,7 @@ class TaskList(ctk.CTkScrollableFrame):
             
         for i, task in enumerate(self.ct):
             if self.sc:
-                self.add_to_task_list(task, i + len(self.ct))
+                self.add_to_task_list(task, i + len(self.at))
             else:
                 task.grid_forget()
             

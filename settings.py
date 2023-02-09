@@ -1,5 +1,6 @@
 import json
 
+
 class Settings():
     def __init__(self):
         sc, am = self.read_settings()
