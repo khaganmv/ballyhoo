@@ -1,4 +1,5 @@
 from util import Util
+from settings import Settings
 
 import customtkinter as ctk
 import json
@@ -68,7 +69,7 @@ class Task():
         
 
 class TaskList(ctk.CTkScrollableFrame):
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, sc, **kwargs):
         super().__init__(master, **kwargs)
         
         tasks = self.read_tasks()
@@ -78,7 +79,7 @@ class TaskList(ctk.CTkScrollableFrame):
         # completed tasks
         self.ct = list(filter(lambda task: task.checkbox.get(), tasks))
         # show completed
-        self.sc = False
+        self.sc = sc
         # next widget
         self.next = None
         
@@ -110,7 +111,7 @@ class TaskList(ctk.CTkScrollableFrame):
         self.at.append(task)
         self.write_tasks()
         if len(self.ct):
-            self.update_task_list(self.sc)    
+            self.update_task_list()
     
     def move_task(self, task):
         if task.checkbox.get():
@@ -122,7 +123,7 @@ class TaskList(ctk.CTkScrollableFrame):
             self.ct = self.ct[:taskid] + self.ct[taskid + 1:]
             self.at.append(task)
             
-        self.update_task_list(self.sc)
+        self.update_task_list()
         self.write_tasks()
     
     def remove_task(self, task):
@@ -135,7 +136,7 @@ class TaskList(ctk.CTkScrollableFrame):
             task.destroy()
             self.at = self.at[:taskid] + self.at[taskid + 1:]
             
-        self.update_task_list(self.sc)
+        self.update_task_list()
         self.write_tasks()
     
     def add_to_task_list(self, task, rowid):
@@ -151,12 +152,12 @@ class TaskList(ctk.CTkScrollableFrame):
         
         task.button.grid(row=rowid, column=2)
     
-    def update_task_list(self, show_completed=False):
+    def update_task_list(self):
         for i, task in enumerate(self.at):
             self.add_to_task_list(task, i)
             
         for i, task in enumerate(self.ct):
-            if show_completed:
+            if self.sc:
                 self.add_to_task_list(task, i + len(self.ct))
             else:
                 task.grid_forget()
@@ -200,7 +201,9 @@ class Ballyhoo(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        ctk.set_appearance_mode('system')
+        self.settings = Settings()
+
+        ctk.set_appearance_mode(self.settings.am)
         ctk.set_default_color_theme('dark-blue')
 
         self.title("Ballyhoo")
@@ -210,21 +213,19 @@ class Ballyhoo(ctk.CTk):
         self.grid_columnconfigure((0, 1), weight=1)
         
         # configure show completed switch
-        self.scs = ctk.CTkSwitch(master=self, text='Show Completed')    
+        self.scs = ctk.CTkSwitch(master=self, text='Show Completed')
+        if self.settings.sc:
+            self.scs.select()
         self.scs.grid(row=0, column=0, padx=10, pady=10)
         
         # configure dark mode switch
-        self.dms = ctk.CTkSwitch(
-            master=self, 
-            text='Dark Mode', 
-            command=self.toggle_dark_mode
-        )
+        self.dms = ctk.CTkSwitch(master=self, text='Dark Mode', command=self.toggle_dark_mode)
         if ctk.get_appearance_mode() == 'Dark':
             self.dms.select()
         self.dms.grid(row=0, column=1, padx=10, pady=10)
         
         # configure task list
-        self.tl = TaskList(master=self)
+        self.tl = TaskList(master=self, sc=self.settings.sc)
         self.tl.grid(row=1, column=0, columnspan=2, padx=20, sticky='nsew')
         
         # configure user input field
@@ -235,14 +236,7 @@ class Ballyhoo(ctk.CTk):
             command=lambda event, widget=self.uif: Util.select_all(widget)
         )
         self.uif.bind(sequence='<Up>', command=self.navigate_to_prev)
-        self.uif.grid(
-            row=2, 
-            column=0, 
-            columnspan=2, 
-            padx=25, 
-            pady=(10, 20), 
-            sticky='ew'
-        )
+        self.uif.grid(row=2, column=0, columnspan=2, padx=25, pady=(10, 20), sticky='ew')
         
         self.scs.configure(command=self.show_completed)
         
@@ -252,14 +246,15 @@ class Ballyhoo(ctk.CTk):
         self.uif.focus()
         
     def show_completed(self):
-        self.tl.sc = self.scs.get()
-        self.tl.update_task_list(self.scs.get())
+        self.settings.sc = self.tl.sc = self.scs.get()
+        self.tl.update_task_list()
+        self.settings.write_settings()
         
     def toggle_dark_mode(self):
-        ctk.set_appearance_mode(
-            'dark' if ctk.get_appearance_mode() == 'Light' else 'light'
-        )
-    
+        self.settings.am = am = 'dark' if ctk.get_appearance_mode() == 'Light' else 'light'
+        ctk.set_appearance_mode(am)
+        self.settings.write_settings()
+        
     def add_task(self, event):
         text = self.uif.get()
         if text:

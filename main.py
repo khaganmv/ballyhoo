@@ -3,6 +3,7 @@ from ballyhoo import Ballyhoo
 
 def main():
     open('tasks.json', 'a').close()
+    open('settings.json', 'a').close()
     bh = Ballyhoo()
     bh.mainloop()
     
