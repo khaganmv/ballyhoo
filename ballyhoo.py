@@ -1,3 +1,5 @@
+from util import Util
+
 import customtkinter as ctk
 import json
 from PIL import Image
@@ -13,7 +15,8 @@ class Task():
             master=master, 
             width=0, 
             text=None,
-            variable=iv
+            variable=iv,
+            command=lambda task=self: self.master.move_task(task)
         )
         
         # configure entry
@@ -26,7 +29,7 @@ class Task():
         )
         self.entry.bind(
             sequence='<Control-Key-a>',
-            command=lambda event, widget=self.entry: Ballyhoo.select_all(widget)
+            command=lambda event, widget=self.entry: Util.select_all(widget)
         )
         self.entry.bind(
             sequence='<Up>', 
@@ -49,11 +52,16 @@ class Task():
             image=ctk.CTkImage(im, im, size=(im_width, im_height)),
             command=lambda task=self: master.remove_task(self)
         )
-    
+        
     def destroy(self):
         self.checkbox.destroy()
         self.entry.destroy()
         self.button.destroy()
+        
+    def grid_forget(self):
+        self.checkbox.grid_forget()
+        self.entry.grid_forget()
+        self.button.grid_forget()
     
     def serialize(self):
         return { 'completed': self.checkbox.get(), 'title': self.entry.get() }
@@ -63,8 +71,16 @@ class TaskList(ctk.CTkScrollableFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
         
+        tasks = self.read_tasks()
+        
+        # active tasks
+        self.at = list(filter(lambda task: not task.checkbox.get(), tasks))
+        # completed tasks
+        self.ct = list(filter(lambda task: task.checkbox.get(), tasks))
+        # show completed
+        self.sc = False
+        # next widget
         self.next = None
-        self.tasks = self.read_tasks()
         
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
@@ -85,20 +101,41 @@ class TaskList(ctk.CTkScrollableFrame):
     
     def write_tasks(self, *args):
         tf = open('tasks.json', 'w')
-        json.dump([task.serialize() for task in self.tasks], tf)
+        json.dump([task.serialize() for task in self.at + self.ct], tf)
         tf.close()
     
     def add_task(self, text):        
         task = Task(self, completed=False, title=text)
-        self.add_to_task_list(task, len(self.tasks))
-        self.tasks.append(task)
+        self.add_to_task_list(task, len(self.at))
+        self.at.append(task)
+        self.write_tasks()
+        if len(self.ct):
+            self.update_task_list(self.sc)    
+    
+    def move_task(self, task):
+        if task.checkbox.get():
+            taskid = self.at.index(task)
+            self.at = self.at[:taskid] + self.at[taskid + 1:]
+            self.ct.append(task)
+        else:
+            taskid = self.ct.index(task)
+            self.ct = self.ct[:taskid] + self.ct[taskid + 1:]
+            self.at.append(task)
+            
+        self.update_task_list(self.sc)
         self.write_tasks()
     
     def remove_task(self, task):
-        taskid = self.tasks.index(task)
-        task.destroy()
-        self.tasks = self.tasks[:taskid] + self.tasks[taskid + 1:]
-        self.update_task_list()
+        if task.checkbox.get():
+            taskid = self.ct.index(task)
+            task.destroy()
+            self.ct = self.ct[:taskid] + self.ct[taskid + 1:]
+        else:
+            taskid = self.at.index(task)
+            task.destroy()
+            self.at = self.at[:taskid] + self.at[taskid + 1:]
+            
+        self.update_task_list(self.sc)
         self.write_tasks()
     
     def add_to_task_list(self, task, rowid):
@@ -114,27 +151,50 @@ class TaskList(ctk.CTkScrollableFrame):
         
         task.button.grid(row=rowid, column=2)
     
-    def update_task_list(self):
-        for i, task in enumerate(self.tasks):
+    def update_task_list(self, show_completed=False):
+        for i, task in enumerate(self.at):
             self.add_to_task_list(task, i)
             
+        for i, task in enumerate(self.ct):
+            if show_completed:
+                self.add_to_task_list(task, i + len(self.ct))
+            else:
+                task.grid_forget()
+            
     def navigate_to_prev(self, task):
-        taskid = self.tasks.index(task)
-        
-        if taskid:
-            Ballyhoo.shift_focus_from(
-                self.tasks[taskid].entry, 
-                self.tasks[taskid - 1].entry
-            )
+        if task.checkbox.get():
+            taskid = self.ct.index(task)
+            
+            if taskid:
+                Util.shift_focus_from(self.ct[taskid].entry, self.ct[taskid - 1].entry)
+            elif len(self.at):
+                Util.shift_focus_from(self.ct[taskid].entry, self.at[-1].entry)
+        else:
+            taskid = self.at.index(task)
+            
+            if taskid:
+                Util.shift_focus_from(self.at[taskid].entry, self.at[taskid - 1].entry)
             
     def navigate_to_next(self, task):
-        taskid = self.tasks.index(task)
-        
-        Ballyhoo.shift_focus_from(
-            self.tasks[taskid].entry,
-            self.next if taskid == len(self.tasks) - 1 else self.tasks[taskid + 1].entry
-        )
+        if task.checkbox.get():
+            taskid = self.ct.index(task)
             
+            # a ct can either navigate to the next ct or the next widget
+            Util.shift_focus_from(
+                self.ct[taskid].entry,
+                self.next if taskid == len(self.ct) - 1 else self.ct[taskid + 1].entry
+            )
+        else:
+            taskid = self.at.index(task)
+            # next if last
+            nif = self.ct[0].entry if self.sc and len(self.ct) else self.next
+            
+            # an at can either navigate to the next at, the next ct, or the next widget
+            Util.shift_focus_from(
+                self.at[taskid].entry,
+                nif if taskid == len(self.at) - 1 else self.at[taskid + 1].entry
+            )
+       
         
 class Ballyhoo(ctk.CTk):
     def __init__(self):
@@ -172,7 +232,7 @@ class Ballyhoo(ctk.CTk):
         self.uif.bind(sequence='<Return>', command=self.add_task)
         self.uif.bind(
             sequence='<Control-Key-a>', 
-            command=lambda event, widget=self.uif: Ballyhoo.select_all(widget)
+            command=lambda event, widget=self.uif: Util.select_all(widget)
         )
         self.uif.bind(sequence='<Up>', command=self.navigate_to_prev)
         self.uif.grid(
@@ -184,10 +244,16 @@ class Ballyhoo(ctk.CTk):
             sticky='ew'
         )
         
+        self.scs.configure(command=self.show_completed)
+        
         # store reference to uif in tl for navigation
         self.tl.next = self.uif
         
         self.uif.focus()
+        
+    def show_completed(self):
+        self.tl.sc = self.scs.get()
+        self.tl.update_task_list(self.scs.get())
         
     def toggle_dark_mode(self):
         ctk.set_appearance_mode(
@@ -201,16 +267,7 @@ class Ballyhoo(ctk.CTk):
             self.uif.delete(0, ctk.END)
     
     def navigate_to_prev(self, event):
-        Ballyhoo.shift_focus_from(self.uif, self.tl.tasks[-1].entry)
-    
-    @staticmethod
-    def select_all(widget):
-        widget.select_range(0, ctk.END)
-        widget.icursor(ctk.END)
-        return 'break'
-        
-    @staticmethod
-    def shift_focus_from(src, dst):
-        src.selection_clear()
-        dst.focus()
-        dst.icursor(ctk.END)
+        Util.shift_focus_from(
+            self.uif, 
+            self.tl.ct[-1].entry if self.tl.sc and len(self.tl.ct) else self.tl.at[-1].entry
+        )
