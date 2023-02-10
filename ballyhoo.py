@@ -84,6 +84,9 @@ class TaskList(ctk.CTkScrollableFrame):
         # next widget
         self.next = None
         
+        # configure yscrollincrement for scrolling
+        self._parent_canvas.configure(yscrollincrement=1)
+        
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         
@@ -162,40 +165,39 @@ class TaskList(ctk.CTkScrollableFrame):
                 self.add_to_task_list(task, i + len(self.at))
             else:
                 task.grid_forget()
-            
+        
     def navigate_to_prev(self, task):
         if task.checkbox.get():
             taskid = self.ct.index(task)
+            ne = self.ct[taskid - 1].entry if taskid else self.at[-1].entry
             
-            if taskid:
-                Util.shift_focus_from(self.ct[taskid].entry, self.ct[taskid - 1].entry)
-            elif len(self.at):
-                Util.shift_focus_from(self.ct[taskid].entry, self.at[-1].entry)
+            Util.scroll_into_view(self._parent_canvas, ne)
+            Util.shift_focus_from(self.ct[taskid].entry, ne)
         else:
             taskid = self.at.index(task)
             
             if taskid:
+                Util.scroll_into_view(self._parent_canvas, self.at[taskid - 1].entry)
                 Util.shift_focus_from(self.at[taskid].entry, self.at[taskid - 1].entry)
             
     def navigate_to_next(self, task):
         if task.checkbox.get():
             taskid = self.ct.index(task)
+            ne = self.next if taskid == len(self.ct) - 1 else self.ct[taskid + 1].entry
             
-            # a ct can either navigate to the next ct or the next widget
-            Util.shift_focus_from(
-                self.ct[taskid].entry,
-                self.next if taskid == len(self.ct) - 1 else self.ct[taskid + 1].entry
-            )
+            if ne != self.next:
+                Util.scroll_into_view(self._parent_canvas, ne)
+            
+            Util.shift_focus_from(task.entry, ne)
         else:
             taskid = self.at.index(task)
-            # next if last
             nif = self.ct[0].entry if self.sc and len(self.ct) else self.next
+            ne = nif if taskid == len(self.at) - 1 else self.at[taskid + 1].entry
             
-            # an at can either navigate to the next at, the next ct, or the next widget
-            Util.shift_focus_from(
-                self.at[taskid].entry,
-                nif if taskid == len(self.at) - 1 else self.at[taskid + 1].entry
-            )
+            if ne != self.next:
+                Util.scroll_into_view(self._parent_canvas, ne)
+            
+            Util.shift_focus_from(task.entry, ne)
        
         
 class Ballyhoo(ctk.CTk):
@@ -263,7 +265,7 @@ class Ballyhoo(ctk.CTk):
             self.uif.delete(0, ctk.END)
     
     def navigate_to_prev(self, event):
-        Util.shift_focus_from(
-            self.uif, 
-            self.tl.ct[-1].entry if self.tl.sc and len(self.tl.ct) else self.tl.at[-1].entry
-        )
+        ne = self.tl.ct[-1].entry if self.tl.sc and len(self.tl.ct) else self.tl.at[-1].entry
+        
+        Util.scroll_into_view(self.tl._parent_canvas, ne)
+        Util.shift_focus_from(self.uif, ne)
