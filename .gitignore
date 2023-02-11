@@ -1,3 +1,6 @@
-__pycache__
+src/__pycache__
 tasks.json
 settings.json
+build
+dist
+main.spec
