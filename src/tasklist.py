@@ -7,139 +7,138 @@ import platform
 
 
 class TaskList(ctk.CTkScrollableFrame):
-    def __init__(self, master, sc, **kwargs):
+    def __init__(self, master, input_field, **kwargs):
         super().__init__(master, **kwargs)
         
-        tasks = self.read_tasks()
+        tasks = self.read()
         
-        # active tasks
-        self.at = list(filter(lambda task: not task.checkbox.get(), tasks))
-        # completed tasks
-        self.ct = list(filter(lambda task: task.checkbox.get(), tasks))
-        # show completed
-        self.sc = sc
-        # next widget
-        self.next = None
+        self.active_tasks = list(filter(lambda task: not task.checkbox.get(), tasks))
+        self.completed_tasks = list(filter(lambda task: task.checkbox.get(), tasks))
+        self.show_completed = master.settings.show_completed
+        self.input_field = input_field
         
-        # configure yscrollincrement for scrolling
-        self.master.configure(yscrollincrement=1)
-        
-        self.bind_mousewheel()
-
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         
+        self.bind_mousewheel()
         self.update_task_list()
 
-    def read_tasks(self):
+    def read(self):
         tasks = []
         
-        tf = open('tasks.json', 'a+')
-        if tf.tell():
-            tf.seek(0)
-            data = json.load(tf)
-            tasks = [Task(self, task['completed'], task['title']) for task in data]
-        tf.close()
+        with open('tasks.json', 'a+') as tasks_file:
+            if tasks_file.tell():
+                tasks_file.seek(0)
+                data = json.load(tasks_file)
+                tasks = [Task(self, task['completed'], task['title']) for task in data]
+                
+            tasks_file.close()
         
         return tasks
     
-    def write_tasks(self, *args):
-        tf = open('tasks.json', 'w')
-        json.dump([task.serialize() for task in self.at + self.ct], tf)
-        tf.close()
+    def write(self):
+        with open('tasks.json', 'w') as tasks_file:
+            json.dump(
+                [task.serialize() for task in self.active_tasks + self.completed_tasks], 
+                tasks_file
+            )
+            tasks_file.close()
     
-    def add_task(self, text):        
-        task = Task(self, completed=False, title=text)
+    def add_task(self, title):        
+        task = Task(self, completed=False, title=title)
         
-        self.add_to_task_list(task, len(self.at))
-        self.at.append(task)
+        self.add_to_task_list(task, len(self.active_tasks))
+        self.active_tasks.append(task)
         
-        if self.sc and len(self.ct):
+        if self.show_completed and len(self.completed_tasks):
             self.update_task_list()
-        self.write_tasks()
+            
+        self.write()
     
     def move_task(self, task):
         if task.checkbox.get():
-            taskid = self.at.index(task)
-            
-            self.at = self.at[:taskid] + self.at[taskid + 1:]
-            self.ct.append(task)
+            self.active_tasks.remove(task)
+            self.completed_tasks.append(task)
         else:
-            taskid = self.ct.index(task)
-            
-            self.ct = self.ct[:taskid] + self.ct[taskid + 1:]
-            self.at.append(task)
+            self.completed_tasks.remove(task)
+            self.active_tasks.append(task)
             
         self.update_task_list()
-        self.write_tasks()
+        self.write()
     
     def remove_task(self, task):
         if task.checkbox.get():
-            taskid = self.ct.index(task)
-            self.ct = self.ct[:taskid] + self.ct[taskid + 1:]
+            self.completed_tasks.remove(task)
         else:
-            taskid = self.at.index(task)
-            self.at = self.at[:taskid] + self.at[taskid + 1:]
+            self.active_tasks.remove(task)
             
         task.destroy()
         self.update_task_list()
-        self.write_tasks()
+        self.write()
     
     def add_to_task_list(self, task, rowid):
         task.checkbox.grid(row=rowid, column=0)
-        
-        task.entry.grid(
-            row=rowid, 
-            column=1, 
-            padx=(4, 8), 
-            pady=(4, 0), 
-            sticky='ew'
-        )
-        
+        task.entry.grid(row=rowid, column=1, padx=(4, 8), pady=(4, 0), sticky='ew')
         task.button.grid(row=rowid, column=2)
     
     def update_task_list(self):
-        for i, task in enumerate(self.at):
+        for i, task in enumerate(self.active_tasks):
             self.add_to_task_list(task, i)
             
-        for i, task in enumerate(self.ct):
-            if self.sc:
-                self.add_to_task_list(task, i + len(self.at))
+        for i, task in enumerate(self.completed_tasks):
+            if self.show_completed:
+                self.add_to_task_list(task, i + len(self.active_tasks))
             else:
                 task.grid_forget()
         
     def navigate_to_prev(self, task):
+        prev_entry = None
+        
         if task.checkbox.get():
-            taskid = self.ct.index(task)
-            ne = self.ct[taskid - 1].entry if taskid else self.at[-1].entry
+            completed_index = self.completed_tasks.index(task)
             
-            Util.scroll_into_view(self.master, ne)
-            Util.shift_focus_from(self.ct[taskid].entry, ne)
+            if completed_index:
+                prev_entry = self.completed_tasks[completed_index - 1].entry
+            elif len(self.active_tasks):
+                prev_entry = self.active_tasks[-1].entry
+            
+            if prev_entry:
+                Util.scroll_into_view(self.master, prev_entry)
+                Util.shift_focus_from(task.entry, prev_entry)
         else:
-            taskid = self.at.index(task)
+            active_index = self.active_tasks.index(task)
             
-            if taskid:
-                Util.scroll_into_view(self.master, self.at[taskid - 1].entry)
-                Util.shift_focus_from(self.at[taskid].entry, self.at[taskid - 1].entry)
+            if active_index:
+                prev_entry = self.active_tasks[active_index - 1].entry
+                
+                Util.scroll_into_view(self.master, prev_entry)
+                Util.shift_focus_from(task.entry, prev_entry)
             
     def navigate_to_next(self, task):
         if task.checkbox.get():
-            taskid = self.ct.index(task)
-            ne = self.next if taskid == len(self.ct) - 1 else self.ct[taskid + 1].entry
+            if task == self.completed_tasks[-1]:
+                next_entry = self.input_field
+            else:
+                completed_index = self.completed_tasks.index(task)
+                next_entry = self.completed_tasks[completed_index + 1].entry
+                
+                Util.scroll_into_view(self.master, next_entry)
+                
+            Util.shift_focus_from(task.entry, next_entry)
+        else:            
+            if task == self.active_tasks[-1]:
+                if self.show_completed and len(self.completed_tasks):
+                    next_entry = self.completed_tasks[0].entry
+                else:
+                    next_entry = self.input_field
+            else:
+                active_index = self.active_tasks.index(task)
+                next_entry = self.active_tasks[active_index + 1].entry
             
-            if ne != self.next:
-                Util.scroll_into_view(self.master, ne)
+            if next_entry != self.input_field:
+                Util.scroll_into_view(self.master, next_entry)
             
-            Util.shift_focus_from(task.entry, ne)
-        else:
-            taskid = self.at.index(task)
-            nif = self.ct[0].entry if self.sc and len(self.ct) else self.next
-            ne = nif if taskid == len(self.at) - 1 else self.at[taskid + 1].entry
-            
-            if ne != self.next:
-                Util.scroll_into_view(self.master, ne)
-            
-            Util.shift_focus_from(task.entry, ne)
+            Util.shift_focus_from(task.entry, next_entry)
             
     def bind_mousewheel(self):
         canvas = self.master
@@ -163,9 +162,4 @@ class TaskList(ctk.CTkScrollableFrame):
         #     canvas.bind_all(
         #         sequence='<MouseWheel>',
         #         func=lambda event: canvas.yview_scroll(-event.delta / 120, 'units')
-        #     )
-        # elif system == 'Darwin':
-        #     canvas.bind_all(
-        #         sequence='<MouseWheel>',
-        #         func=lambda event: canvas.yview_scroll(-event.delta, 'units')
         #     )

@@ -3,27 +3,28 @@ import json
 
 class Settings():
     def __init__(self):
-        sc, am = self.read_settings()
+        show_completed, appearance_mode = self.read()
         
-        self.sc = sc if sc else False
-        self.am = am if am else 'dark'
+        self.show_completed = show_completed if show_completed else False
+        self.appearance_mode = appearance_mode if appearance_mode else 'dark'
         
     def serialize(self):
-        return { 'sc': self.sc, 'am': self.am }
+        return { 'show_completed': self.show_completed, 'appearance_mode': self.appearance_mode }
 
-    def read_settings(self):
-        sc = am = None
+    def read(self):
+        show_completed = appearance_mode = None
         
-        sf = open('settings.json', 'a+')
-        if sf.tell():
-            sf.seek(0)
-            data = json.load(sf)
-            sc, am = data['sc'], data['am']
-        sf.close()
+        with open('settings.json', 'a+') as settings_file:
+            if settings_file.tell():
+                settings_file.seek(0)
+                data = json.load(settings_file)
+                show_completed, appearance_mode = data['show_completed'], data['appearance_mode']
+                
+            settings_file.close()
         
-        return sc, am
+        return show_completed, appearance_mode
     
-    def write_settings(self):
-        sf = open('settings.json', 'w')
-        json.dump(self.serialize(), sf)
-        sf.close()
+    def write(self):
+        with open('settings.json', 'w') as settings_file:
+            json.dump(self.serialize(), settings_file)
+            settings_file.close()
