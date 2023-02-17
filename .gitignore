@@ -4,3 +4,5 @@ settings.json
 build
 dist
 main.spec
+scripts/release.sh
+scripts/release.bat

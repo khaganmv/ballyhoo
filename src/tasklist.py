@@ -158,8 +158,3 @@ class TaskList(ctk.CTkScrollableFrame):
                 sequence='<Button-5>',
                 func=lambda event: canvas.yview_scroll(16, 'units')
             )
-        # elif system == 'Windows':
-        #     canvas.bind_all(
-        #         sequence='<MouseWheel>',
-        #         func=lambda event: canvas.yview_scroll(-event.delta / 120, 'units')
-        #     )
