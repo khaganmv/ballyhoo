@@ -9,7 +9,7 @@ Ballyhoo is a simple to-do list built with [CustomTkinter](https://github.com/To
 ## TODO
 
 - [x] Refactoring
-- [ ] DateTime picker
+- [x] DateTime picker
 - [ ] Task editor
 - [x] Windows support
 - [ ] Windows installer
