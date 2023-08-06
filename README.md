@@ -15,20 +15,13 @@ Ballyhoo is a simple to-do list built with [CustomTkinter](https://github.com/To
 - [ ] Windows installer
 - [ ] Add to startup support
 
-## Installation
-
-Extract `ballyhoo.zip` and run `main`.
-
 ## Building from source
 
-### Dependencies
+Run `pip install -r requirements.txt` followed by `scripts/build.bat`.
 
-Simply run `pip install -r requirements.txt` to install the dependencies.
+> **Note:**  Building with Python 3.11.4 produces a faulty executable. Build with an earlier version instead.
 
-### Linux
+## Attributions
 
-Simply run the `scripts/build.sh` script.
-
-### Windows
-
-Simply run the `scripts/build.bat` script.
+1. <a href="https://www.flaticon.com/free-icons/edit" title="edit icons">Edit icons created by Pixel perfect - Flaticon</a>
+2. <a href="https://www.flaticon.com/free-icons/delete" title="delete icons">Delete icons created by Pixel perfect - Flaticon</a>

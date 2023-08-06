@@ -9,15 +9,16 @@ import platform
 
 
 class TaskList(ctk.CTkScrollableFrame):
-    def __init__(self, master, input_field, **kwargs):
+    def __init__(self, master, dir, input_field, **kwargs):
         super().__init__(master, **kwargs)
+        self.dir = dir
+        self.input_field = input_field
         
         tasks = self.read()
         
         self.active_tasks = list(filter(lambda task: not task.checkbox.get(), tasks))
         self.completed_tasks = list(filter(lambda task: task.checkbox.get(), tasks))
         self.show_completed = master.settings.show_completed
-        self.input_field = input_field
         
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
@@ -28,7 +29,7 @@ class TaskList(ctk.CTkScrollableFrame):
     def read(self):
         tasks = []
         
-        with open('tasks.json', 'a+') as tasks_file:
+        with open(self.dir + 'tasks.json', 'a+') as tasks_file:
             if tasks_file.tell():
                 tasks_file.seek(0)
                 data = json.load(tasks_file)
@@ -47,10 +48,11 @@ class TaskList(ctk.CTkScrollableFrame):
         return tasks
     
     def write(self):
-        with open('tasks.json', 'w') as tasks_file:
+        with open(self.dir + 'tasks.json', 'w') as tasks_file:
             json.dump(
                 [task.serialize() for task in self.active_tasks + self.completed_tasks], 
-                tasks_file
+                tasks_file,
+                indent=4
             )
             tasks_file.close()
     
@@ -76,6 +78,9 @@ class TaskList(ctk.CTkScrollableFrame):
         self.update_task_list()
         self.write()
     
+    def edit_task(self, task):
+        print('TODO: Task editor')
+    
     def remove_task(self, task):
         if task.checkbox.get():
             self.completed_tasks.remove(task)
@@ -89,7 +94,8 @@ class TaskList(ctk.CTkScrollableFrame):
     def add_to_task_list(self, task, rowid):
         task.checkbox.grid(row=rowid, column=0)
         task.entry.grid(row=rowid, column=1, padx=(4, 8), pady=(4, 0), sticky='ew')
-        task.button.grid(row=rowid, column=4)
+        task.edit_button.grid(row=rowid, column=4)
+        task.remove_button.grid(row=rowid, column=5)
         
         is_past = task.is_past()
         

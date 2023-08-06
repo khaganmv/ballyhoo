@@ -14,8 +14,8 @@ class Task():
         
         int_var = ctk.IntVar(master, completed)
         string_var = ctk.StringVar(master, title)
-        # image = Image.open('resources/remove.png')
-        image = Image.open(Util.resource_path('remove.png'))
+        edit, remove = Image.open('resources/edit.png'), Image.open('resources/remove.png')
+        # edit, remove = Image.open(Util.resource_path('resources/edit.png')), Image.open(Util.resource_path('resources/remove.png'))
         
         int_var.trace_add( 
             mode='write', 
@@ -41,13 +41,23 @@ class Task():
             placeholder_text_color=('black', 'white')
         )
         
-        self.button = ctk.CTkButton(
+        self.edit_button = ctk.CTkButton(
             master=master,
             width=BUTTON_WIDTH,
             height=BUTTON_HEIGHT,
             fg_color='transparent',
             text=None,
-            image=ctk.CTkImage(image, image, size=(BUTTON_WIDTH, BUTTON_HEIGHT)),
+            image=ctk.CTkImage(edit, edit, size=(BUTTON_WIDTH, BUTTON_HEIGHT)),
+            command=lambda task=self: master.edit_task(task)
+        )
+        
+        self.remove_button = ctk.CTkButton(
+            master=master,
+            width=BUTTON_WIDTH,
+            height=BUTTON_HEIGHT,
+            fg_color='transparent',
+            text=None,
+            image=ctk.CTkImage(remove, remove, size=(BUTTON_WIDTH, BUTTON_HEIGHT)),
             command=lambda task=self: master.remove_task(task)
         )
         
@@ -82,7 +92,8 @@ class Task():
     def destroy(self):
         self.checkbox.destroy()
         self.entry.destroy()
-        self.button.destroy()
+        self.edit_button.destroy()
+        self.remove_button.destroy()
         
         if self.date_label:
             self.date_label.destroy()

@@ -1,30 +1,35 @@
 import json
 
-
 class Settings():
-    def __init__(self):
-        show_completed, appearance_mode = self.read()
-        
-        self.show_completed = show_completed if show_completed else False
-        self.appearance_mode = appearance_mode if appearance_mode else 'dark'
+    def __init__(self, dir):
+        self.dir = dir
+        self.width, self.height, self.show_completed, self.appearance_mode = self.read()
         
     def serialize(self):
-        return { 'show_completed': self.show_completed, 'appearance_mode': self.appearance_mode }
+        return { 
+            'width': self.width, 
+            'height': self.height, 
+            'show_completed': self.show_completed, 
+            'appearance_mode': self.appearance_mode 
+        }
 
     def read(self):
-        show_completed = appearance_mode = None
+        width = 500
+        height = 400
+        show_completed = False
+        appearance_mode = 'dark'
         
-        with open('settings.json', 'a+') as settings_file:
+        with open(self.dir + 'settings.json', 'a+') as settings_file:
             if settings_file.tell():
                 settings_file.seek(0)
                 data = json.load(settings_file)
-                show_completed, appearance_mode = data['show_completed'], data['appearance_mode']
-                
-            settings_file.close()
+                width = data['width']
+                height = data['height']
+                show_completed = data['show_completed']
+                appearance_mode = data['appearance_mode']
         
-        return show_completed, appearance_mode
+        return width, height, show_completed, appearance_mode
     
     def write(self):
-        with open('settings.json', 'w') as settings_file:
-            json.dump(self.serialize(), settings_file)
-            settings_file.close()
+        with open(self.dir + 'settings.json', 'w') as settings_file:
+            json.dump(self.serialize(), settings_file, indent=4)
