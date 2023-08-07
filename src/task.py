@@ -1,4 +1,6 @@
 from util import Util
+from bhdate import BHDate
+from bhtime import BHTime
 
 import customtkinter as ctk
 from PIL import Image
@@ -9,19 +11,19 @@ class Task():
     def __init__(self, master, completed, title, date=None, time=None):
         BUTTON_WIDTH = BUTTON_HEIGHT = 24
         
+        self.master = master
         self.date = date
         self.time = time
         
         int_var = ctk.IntVar(master, completed)
         string_var = ctk.StringVar(master, title)
-        edit, remove = Image.open('resources/edit.png'), Image.open('resources/remove.png')
-        # edit, remove = Image.open(Util.resource_path('resources/edit.png')), Image.open(Util.resource_path('resources/remove.png'))
+        datetime_icon = Image.open(Util.resource_path('time.png'))
+        remove_icon = Image.open(Util.resource_path('remove.png'))
         
         int_var.trace_add( 
             mode='write', 
             callback=lambda var, index, mode: master.write
         )
-        
         string_var.trace_add(
             mode='write', 
             callback=lambda var, index, mode: master.write
@@ -34,42 +36,32 @@ class Task():
             variable=int_var,
             command=lambda task=self: master.move_task(task)
         )
-        
         self.entry = ctk.CTkEntry(
             master=master, 
             textvariable=string_var,
             placeholder_text_color=('black', 'white')
         )
-        
-        self.edit_button = ctk.CTkButton(
+        self.datetime_button = ctk.CTkButton(
             master=master,
             width=BUTTON_WIDTH,
             height=BUTTON_HEIGHT,
             fg_color='transparent',
             text=None,
-            image=ctk.CTkImage(edit, edit, size=(BUTTON_WIDTH, BUTTON_HEIGHT)),
-            command=lambda task=self: master.edit_task(task)
+            image=ctk.CTkImage(datetime_icon, datetime_icon, size=(BUTTON_WIDTH, BUTTON_HEIGHT)),
+            command=lambda task=self: master.time_task(task)
         )
-        
         self.remove_button = ctk.CTkButton(
             master=master,
             width=BUTTON_WIDTH,
             height=BUTTON_HEIGHT,
             fg_color='transparent',
             text=None,
-            image=ctk.CTkImage(remove, remove, size=(BUTTON_WIDTH, BUTTON_HEIGHT)),
+            image=ctk.CTkImage(remove_icon, remove_icon, size=(BUTTON_WIDTH, BUTTON_HEIGHT)),
             command=lambda task=self: master.remove_task(task)
         )
         
-        self.date_label = self.time_label = None
-        
-        if self.date and self.date.is_set():
-            date_text = str(self.date)
-            self.date_label = ctk.CTkLabel(master=master, text=date_text)
-            
-        if self.time and self.time.is_set():
-            time_text = str(self.time)
-            self.time_label = ctk.CTkLabel(master=master, text=time_text)
+        self.datetime_label = None
+        self.update_datetime_label()
             
         self.entry.bind(
             sequence='<Control-Key-a>',
@@ -88,29 +80,44 @@ class Task():
             command=lambda event, canvas=master.master, widget=self.entry:
                         Util.scroll_into_view(canvas, widget)
         )
-        
+    
+    def update_datetime_label(self):
+        if self.date.is_set() and self.time.is_set():
+            date_text = str(self.date)
+            time_text = str(self.time)
+            
+            if self.datetime_label:
+                self.datetime_label.configure(text=date_text + ' ' + time_text)
+            else:
+                self.datetime_label = ctk.CTkLabel(
+                    master=self.master, 
+                    text=date_text + ' ' + time_text,
+                    fg_color=('white', '#4C4E52'),
+                    corner_radius=6
+                )
+                
+            if self.is_past():
+                self.datetime_label.configure(text_color='red')
+            else:
+                self.datetime_label.configure(text_color=('gray14', 'gray84'))
+    
     def destroy(self):
         self.checkbox.destroy()
         self.entry.destroy()
-        self.edit_button.destroy()
+        self.datetime_button.destroy()
         self.remove_button.destroy()
         
-        if self.date_label:
-            self.date_label.destroy()
-            
-        if self.time_label:
-            self.time_label.destroy()
+        if self.datetime_label:
+            self.datetime_label.destroy()
         
     def grid_forget(self):
         self.checkbox.grid_forget()
         self.entry.grid_forget()
-        self.button.grid_forget()
+        self.datetime_button.grid_forget()
+        self.remove_button.grid_forget()
         
-        if self.date_label:
-            self.date_label.grid_forget()
-            
-        if self.time_label:
-            self.time_label.grid_forget()
+        if self.datetime_label:
+            self.datetime_label.grid_forget()
     
     def serialize(self):
         return {
@@ -122,10 +129,4 @@ class Task():
         
     def is_past(self):
         now = datetime.now()
-        
-        if self.date and self.date.is_set() and self.date.is_past(now):
-            return True
-        elif self.time and self.time.is_set() and self.time.is_past(now):
-            return True
-            
-        return False
+        return now > datetime(self.date.year, self.date.month, self.date.day, self.time.hour, self.time.minute)

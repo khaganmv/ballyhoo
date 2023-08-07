@@ -1,9 +1,6 @@
 from util import Util
 from settings import Settings
 from tasklist import TaskList
-from bhdate import BHDate
-from bhtime import BHTime
-from datetimepicker import DateTimePicker
 
 import customtkinter as ctk
 import os
@@ -34,8 +31,8 @@ class Ballyhoo(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        # dir = os.getenv('LOCALAPPDATA') + '/Ballyhoo/'
-        dir = './'
+        dir = os.getenv('LOCALAPPDATA') + '/Ballyhoo/'
+        # dir = './'
         
         if not os.path.isdir(dir):
             os.mkdir(dir)
@@ -50,11 +47,7 @@ class Ballyhoo(ctk.CTk):
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.configure(yscrollincrement=1)
-        self.center()
-        
-        self.date = BHDate(None, None, None)
-        self.time = BHTime(None, None)
-        self.datetime_picker = None
+        Util.center(self)
         
         self.switch_frame = ctk.CTkFrame(master=self)
         self.show_completed_switch = ctk.CTkSwitch(master=self.switch_frame, text='Show Completed')
@@ -91,16 +84,6 @@ class Ballyhoo(ctk.CTk):
         self.input_field.grid(row=2, column=0, padx=25, pady=(10, 20), sticky='ew')
         
         self.input_field.focus()
-                
-    def center(self):
-        self.update()
-        frame_width = self.winfo_rootx() - self.winfo_x()
-        window_width = self.settings.width + 2 * frame_width
-        titlebar_height = self.winfo_rooty() - self.winfo_y()
-        win_height = self.settings.height + titlebar_height + frame_width
-        x = self.winfo_screenwidth() // 2 - window_width // 2
-        y = self.winfo_screenheight() // 2 - win_height // 2
-        self.geometry(f'{self.settings.width}x{self.settings.height}+{x}+{y}')
     
     def resize(self, event):
         if event.widget == self:
@@ -109,7 +92,7 @@ class Ballyhoo(ctk.CTk):
                 self.settings.height = event.height
                 
                 self.settings.write()
-    
+
     def show_completed(self):
         self.settings.show_completed = self.show_completed_switch.get()
         self.task_list.show_completed = self.settings.show_completed
@@ -121,10 +104,8 @@ class Ballyhoo(ctk.CTk):
         title = self.input_field.get()
         
         if title:
-            self.task_list.add_task(title, self.date.copy(), self.time.copy())
+            self.task_list.add_task(title)
             self.input_field.delete(0, ctk.END)
-            self.date.reset()
-            self.time.reset()
     
     def navigate_to_task_list(self):
         entry = None
@@ -137,12 +118,3 @@ class Ballyhoo(ctk.CTk):
         if entry:
             Util.scroll_into_view(self.task_list.master, entry)
             Util.shift_focus_from(self.input_field, entry)
-            
-    def open_datetime_picker(self):
-        if self.datetime_picker:
-            self.datetime_picker.lift()
-            self.datetime_picker.focus()
-        else:
-            self.datetime_picker = DateTimePicker(master=self, date=self.date, time=self.time)
-        
-        self.datetime_picker = None

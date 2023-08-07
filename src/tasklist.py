@@ -2,6 +2,7 @@ from util import Util
 from task import Task
 from bhdate import BHDate
 from bhtime import BHTime
+from datetimepicker import DateTimePicker
 
 import customtkinter as ctk
 import json
@@ -38,8 +39,8 @@ class TaskList(ctk.CTkScrollableFrame):
                         self, 
                         task['completed'], 
                         task['title'],
-                        BHDate.from_str(task['date']) if task['date'] else None,
-                        BHTime.from_str(task['time']) if task['time'] else None
+                        BHDate.from_str(task['date']) if task['date'] else BHDate(None, None, None),
+                        BHTime.from_str(task['time']) if task['time'] else BHTime(None, None)
                     ) 
                     for task in data]
                 
@@ -56,8 +57,8 @@ class TaskList(ctk.CTkScrollableFrame):
             )
             tasks_file.close()
     
-    def add_task(self, title, date, time):
-        task = Task(self, completed=False, title=title, date=date, time=time)
+    def add_task(self, title):
+        task = Task(self, completed=False, title=title, date=BHDate(), time=BHTime())
         
         self.add_to_task_list(task, len(self.active_tasks))
         self.active_tasks.append(task)
@@ -78,8 +79,10 @@ class TaskList(ctk.CTkScrollableFrame):
         self.update_task_list()
         self.write()
     
-    def edit_task(self, task):
-        print('TODO: Task editor')
+    def time_task(self, task):
+        datetime_picker = DateTimePicker(master=self, task=task)
+        datetime_picker.lift()
+        datetime_picker.focus()
     
     def remove_task(self, task):
         if task.checkbox.get():
@@ -87,30 +90,20 @@ class TaskList(ctk.CTkScrollableFrame):
         else:
             self.active_tasks.remove(task)
             
+        task.grid_forget()
         task.destroy()
         self.update_task_list()
         self.write()
     
     def add_to_task_list(self, task, rowid):
         task.checkbox.grid(row=rowid, column=0)
-        task.entry.grid(row=rowid, column=1, padx=(4, 8), pady=(4, 0), sticky='ew')
-        task.edit_button.grid(row=rowid, column=4)
-        task.remove_button.grid(row=rowid, column=5)
+        task.entry.grid(row=rowid, column=1, padx=(4, 8), pady=(0, 0), sticky='ew')
+        task.datetime_button.grid(row=rowid, column=3)
+        task.remove_button.grid(row=rowid, column=4)
         
-        is_past = task.is_past()
-        
-        if task.date_label:
-            if is_past:
-                task.date_label.configure(text_color='red')
+        if task.datetime_label:            
+            task.datetime_label.grid(row=rowid, column=2, padx=4)
             
-            task.date_label.grid(row=rowid, column=2, padx=2)
-            
-        if task.time_label:
-            if is_past:
-                task.time_label.configure(text_color='red')
-            
-            task.time_label.grid(row=rowid, column=3, padx=2)
-    
     def update_task_list(self):
         for i, task in enumerate(self.active_tasks):
             self.add_to_task_list(task, i)

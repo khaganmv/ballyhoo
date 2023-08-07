@@ -6,7 +6,7 @@ class BHTime():
     def from_str(time):
         return BHTime(int(time[:2]), int(time[3:]))
     
-    def __init__(self, hour, minute):
+    def __init__(self, hour=None, minute=None):
         self.hour = hour
         self.minute = minute
     
@@ -24,7 +24,7 @@ class BHTime():
         self.hour = self.minute = None
 
     def is_set(self):
-        return self.hour and self.minute
+        return self.hour != None and self.minute != None
 
     def copy(self):
         return BHTime(self.hour, self.minute)

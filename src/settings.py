@@ -14,8 +14,8 @@ class Settings():
         }
 
     def read(self):
-        width = 500
-        height = 400
+        width = 600
+        height = 500
         show_completed = False
         appearance_mode = 'dark'
         

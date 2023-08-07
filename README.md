@@ -10,10 +10,10 @@ Ballyhoo is a simple to-do list built with [CustomTkinter](https://github.com/To
 
 - [x] Refactoring
 - [x] DateTime picker
-- [ ] Task editor
 - [x] Windows support
 - [ ] Windows installer
-- [ ] Add to startup support
+- [ ] Add to startup
+- [ ] Linux support
 
 ## Building from source
 
@@ -23,5 +23,5 @@ Run `pip install -r requirements.txt` followed by `scripts/build.bat`.
 
 ## Attributions
 
-1. <a href="https://www.flaticon.com/free-icons/edit" title="edit icons">Edit icons created by Pixel perfect - Flaticon</a>
+1. <a href="https://www.flaticon.com/free-icons/clock" title="clock icons">Clock icons created by Pixel perfect - Flaticon</a>
 2. <a href="https://www.flaticon.com/free-icons/delete" title="delete icons">Delete icons created by Pixel perfect - Flaticon</a>

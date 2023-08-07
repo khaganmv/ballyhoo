@@ -1,20 +1,23 @@
-from bhdate import BHDate
+from util import Util
 
 import customtkinter as ctk
 import calendar
 
 
 class BHCalendar(ctk.CTkFrame):
-    def __init__(self, master, datetime, date, **kwargs):
+    def __init__(self, master, datetime, task, **kwargs):
         super().__init__(master, **kwargs)
         
         self.rowconfigure(1, weight=1)
         self.columnconfigure((0, 1), weight=1)
+        Util.center(self.master.master.master)
         
-        self.day = datetime.day
-        self.month = datetime.month
-        self.year = datetime.year
-        self.date = date
+        self.datetime = datetime
+        self.task = task
+        self.date = task.date
+        self.day = task.date.day if task.date.is_set() else datetime.day
+        self.month = task.date.month if task.date.is_set() else datetime.month
+        self.year = task.date.year if task.date.is_set() else datetime.year
         self.weekdays = ['Mon', 'Tue', 'Wen', 'Thu', 'Fri', 'Sat', 'Sun']
         self.months = {month: i for i, month in enumerate(calendar.month_name)}
         self.last_pressed = None
@@ -26,11 +29,10 @@ class BHCalendar(ctk.CTkFrame):
         )
         self.year_picker = ctk.CTkOptionMenu(
             master=self, 
-            values=[str(i) for i in range(self.year, self.year + 10)],
+            values=[str(i) for i in range(self.datetime.year, self.datetime.year + 10)],
             command=self.update_year
         )
         self.day_picker = ctk.CTkFrame(master=self)
-        self.save_button = ctk.CTkButton(master=self, text='Save', command=self.save_date)
         
         self.day_picker.columnconfigure(
             [i for i in range(0, len(self.weekdays))],
@@ -43,7 +45,6 @@ class BHCalendar(ctk.CTkFrame):
         self.month_picker.grid(row=0, column=0)
         self.year_picker.grid(row=0, column=1)
         self.day_picker.grid(row=1, column=0, columnspan=2, sticky='nsew')
-        self.save_button.grid(row=2, column=0, columnspan=2, padx=20, pady=(0, 5))
         
         self.update_day_picker()
     
@@ -53,9 +54,8 @@ class BHCalendar(ctk.CTkFrame):
             
         for i, weekday in enumerate(self.weekdays):
             label = ctk.CTkLabel(master=self.day_picker, text=weekday)
-            
             label.grid(row=0, column=i, padx=10, pady=(10, 0), sticky='nsew')
-            
+        
         for i, week in enumerate(calendar.monthcalendar(self.year, self.month)):
             for j, day in enumerate(week):
                 button = ctk.CTkButton(
@@ -78,9 +78,6 @@ class BHCalendar(ctk.CTkFrame):
         if self.year != int(year):
             self.year = int(year)
             self.update_day_picker()
-            
-    def save_date(self):
-        self.date.set_date(self.day, self.month, self.year)
     
     def update_day(self, widget):
         self.day = int(widget.cget('text'))

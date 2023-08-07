@@ -6,7 +6,7 @@ class BHDate():
     def from_str(date):
         return BHDate(int(date[:2]), int(date[3:5]), int(date[6:]))
     
-    def __init__(self, day, month, year):
+    def __init__(self, day=None, month=None, year=None):
         self.day = day
         self.month = month
         self.year = year
@@ -26,7 +26,7 @@ class BHDate():
         self.day = self.month = self.year = None
 
     def is_set(self):
-        return self.day and self.month and self.year
+        return self.day != None and self.month != None and self.year != None
 
     def copy(self):
         return BHDate(self.day, self.month, self.year)
