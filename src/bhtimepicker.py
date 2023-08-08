@@ -13,30 +13,30 @@ class BHTimePicker(ctk.CTkFrame):
         self.year = datetime.year
         self.hour = task.time.hour if task.time.is_set() else datetime.hour
         self.minute = task.time.minute if task.time.is_set() else datetime.minute
+        self.font = ctk.CTkFont('fixedsys', 56)
         
-        self.rowconfigure(0, weight=1)
-        self.columnconfigure(0, weight=1)
-        
-        self.clock = ctk.CTkFrame(master=self,fg_color=('white', '#4C4E52'))
-        self.clock.rowconfigure(0, weight=1)
-        self.clock.columnconfigure((0, 1, 2), weight=1)
+        self.rowconfigure((0, 1, 2), weight=1)
+        self.columnconfigure((0, 1, 2), weight=1)
         
         self.hour_label = ctk.CTkLabel(
-            master=self.clock, 
+            master=self, 
             text=f'{self.hour:02}', 
-            font=('default', 32), 
-            justify='center'
+            justify='center',
+            font=self.font,
+            fg_color='transparent'
         )
         self.colon_label = ctk.CTkLabel(
-            master=self.clock, 
+            master=self, 
             text=':', 
-            font=('default', 32)
+            font=self.font,
+            fg_color='transparent'
         )
         self.minute_label = ctk.CTkLabel(
-            master=self.clock, 
+            master=self, 
             text=f'{self.minute:02}', 
-            font=('default', 32), 
-            justify='center'
+            justify='center',
+            font=self.font,
+            fg_color='transparent'
         )
         
         self.hour_label.bind(
@@ -48,11 +48,10 @@ class BHTimePicker(ctk.CTkFrame):
             command=lambda event: self.increment_minute(event)
         )
 
-        self.clock.grid(row=0, column=0, padx=(40, 40), pady=(40, 40), sticky='nsew')
-        self.hour_label.grid(row=0, column=0, sticky='nsew')
-        self.colon_label.grid(row=0, column=1, sticky='nsew')
-        self.minute_label.grid(row=0, column=2, sticky='nsew')
-                
+        self.hour_label.grid(row=1, column=0, sticky='nsew')
+        self.colon_label.grid(row=1, column=1, sticky='nsew')
+        self.minute_label.grid(row=1, column=2, sticky='nsew')
+        
     def increment_hour(self, event):
         if self.hour_label.cget('text').isdigit():
             by = 1 if event.delta > 0 else -1

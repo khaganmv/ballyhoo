@@ -14,10 +14,12 @@ class Task():
         self.master = master
         self.date = date
         self.time = time
+        self.font = ctk.CTkFont('fixedsys', 12)
         
         int_var = ctk.IntVar(master, completed)
         string_var = ctk.StringVar(master, title)
-        datetime_icon = Image.open(Util.resource_path('time.png'))
+        datetime_icon_light = Image.open(Util.resource_path('clock_light.png'))
+        datetime_icon_dark = Image.open(Util.resource_path('clock_dark.png'))
         remove_icon = Image.open(Util.resource_path('remove.png'))
         
         int_var.trace_add( 
@@ -39,7 +41,8 @@ class Task():
         self.entry = ctk.CTkEntry(
             master=master, 
             textvariable=string_var,
-            placeholder_text_color=('black', 'white')
+            placeholder_text_color=('black', 'white'),
+            font=self.font
         )
         self.datetime_button = ctk.CTkButton(
             master=master,
@@ -47,7 +50,7 @@ class Task():
             height=BUTTON_HEIGHT,
             fg_color='transparent',
             text=None,
-            image=ctk.CTkImage(datetime_icon, datetime_icon, size=(BUTTON_WIDTH, BUTTON_HEIGHT)),
+            image=ctk.CTkImage(datetime_icon_light, datetime_icon_dark, size=(BUTTON_WIDTH, BUTTON_HEIGHT)),
             command=lambda task=self: master.time_task(task)
         )
         self.remove_button = ctk.CTkButton(
@@ -93,7 +96,8 @@ class Task():
                     master=self.master, 
                     text=date_text + ' ' + time_text,
                     fg_color=('white', '#4C4E52'),
-                    corner_radius=6
+                    corner_radius=6,
+                    font=self.font
                 )
                 
             if self.is_past():

@@ -17,8 +17,10 @@ class DateTimePicker(ctk.CTkToplevel):
         
         self.task = task
         self.datetime = datetime.now()
+        self.font = ctk.CTkFont('fixedsys', 12)
         
         self.datetime_tabview = ctk.CTkTabview(master=self)
+        self.datetime_tabview._segmented_button.configure(font=self.font)
         self.date_tab = self.datetime_tabview.add('Date')
         self.time_tab = self.datetime_tabview.add('Time')
         
@@ -26,8 +28,13 @@ class DateTimePicker(ctk.CTkToplevel):
         self.date_tab.columnconfigure(0, weight=1)
         self.time_tab.rowconfigure(0, weight=1)
         self.time_tab.columnconfigure(0, weight=1)
-        self.save_button = ctk.CTkButton(master=self, text='Save', command=self.save_datetime)
         
+        self.save_button = ctk.CTkButton(
+            master=self, 
+            text='Save', 
+            command=self.save_datetime,
+            font=self.font
+        )
         self.date_picker = BHCalendar(
             master=self.date_tab, 
             datetime=self.datetime,

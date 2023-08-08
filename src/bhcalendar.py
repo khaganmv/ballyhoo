@@ -21,19 +21,24 @@ class BHCalendar(ctk.CTkFrame):
         self.weekdays = ['Mon', 'Tue', 'Wen', 'Thu', 'Fri', 'Sat', 'Sun']
         self.months = {month: i for i, month in enumerate(calendar.month_name)}
         self.last_pressed = None
+        self.font = ctk.CTkFont('fixedsys', 12)
         
         self.month_picker = ctk.CTkOptionMenu(
             master=self, 
             values=calendar.month_name[1:],
-            command=self.update_month
+            command=self.update_month,
+            font=self.font,
+            dropdown_font=self.font
         )
         self.year_picker = ctk.CTkOptionMenu(
             master=self, 
             values=[str(i) for i in range(self.datetime.year, self.datetime.year + 10)],
-            command=self.update_year
+            command=self.update_year,
+            font=self.font,
+            dropdown_font=self.font
         )
-        self.day_picker = ctk.CTkFrame(master=self)
         
+        self.day_picker = ctk.CTkFrame(master=self)
         self.day_picker.columnconfigure(
             [i for i in range(0, len(self.weekdays))],
             weight=1
@@ -53,7 +58,7 @@ class BHCalendar(ctk.CTkFrame):
             child.destroy()
             
         for i, weekday in enumerate(self.weekdays):
-            label = ctk.CTkLabel(master=self.day_picker, text=weekday)
+            label = ctk.CTkLabel(master=self.day_picker, text=weekday, font=self.font)
             label.grid(row=0, column=i, padx=10, pady=(10, 0), sticky='nsew')
         
         for i, week in enumerate(calendar.monthcalendar(self.year, self.month)):
@@ -63,7 +68,8 @@ class BHCalendar(ctk.CTkFrame):
                     corner_radius=0,
                     fg_color='gray',
                     text=day if day else '', 
-                    state='normal' if day else 'disabled' 
+                    state='normal' if day else 'disabled',
+                    font=self.font
                 )
                 
                 button.configure(command=lambda widget=button: self.update_day(widget))

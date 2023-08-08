@@ -7,4 +7,9 @@ set dir=%dir:~10%
 set ctk=\customtkinter;customtkinter
 set dirctk=%dir%%ctk%
 
-pyinstaller --noconfirm --onefile --windowed --hidden-import=PIL._tkinter_finder --add-data %dirctk% --add-data resources/time.png;. --add-data resources/remove.png;. src/main.py
+set flags=--noconfirm --onefile --windowed
+set lib=--hidden-import=PIL._tkinter_finder --add-data %dirctk%
+set data=--add-data resources/clock_light.png;. --add-data resources/clock_dark.png;. --add-data resources/remove.png;. --add-data resources/ballyhoo.ico;.
+set bin=--name ballyhoo --icon=resources/ballyhoo.ico src/main.py
+
+pyinstaller %flags% %lib% %data% %bin%
