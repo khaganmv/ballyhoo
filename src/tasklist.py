@@ -66,6 +66,8 @@ class TaskList(ctk.CTkScrollableFrame):
         if self.show_completed and len(self.completed_tasks):
             self.update_task_list()
             
+        self.update_idletasks()
+        Util.scroll_into_view(self.master, task.entry)
         self.write()
     
     def move_task(self, task):
