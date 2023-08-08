@@ -1,17 +1,15 @@
-from util import Util
+import calendar
 
 import customtkinter as ctk
-import calendar
+
+from util import Util
 
 
 class BHCalendar(ctk.CTkFrame):
     def __init__(self, master, datetime, task, **kwargs):
         super().__init__(master, **kwargs)
         
-        self.rowconfigure(1, weight=1)
-        self.columnconfigure((0, 1), weight=1)
-        Util.center(self.master.master.master)
-        
+        # init self
         self.datetime = datetime
         self.task = task
         self.date = task.date
@@ -23,6 +21,13 @@ class BHCalendar(ctk.CTkFrame):
         self.last_pressed = None
         self.font = ctk.CTkFont('fixedsys', 12)
         
+        # init appearance
+        self.rowconfigure(1, weight=1)
+        self.columnconfigure((0, 1), weight=1)
+        Util.center(self.master.master.master)
+        
+        # init widgets
+        self.day_picker = ctk.CTkFrame(master=self)
         self.month_picker = ctk.CTkOptionMenu(
             master=self, 
             values=calendar.month_name[1:],
@@ -38,15 +43,11 @@ class BHCalendar(ctk.CTkFrame):
             dropdown_font=self.font
         )
         
-        self.day_picker = ctk.CTkFrame(master=self)
-        self.day_picker.columnconfigure(
-            [i for i in range(0, len(self.weekdays))],
-            weight=1
-        )
-        
+        self.day_picker.columnconfigure([i for i in range(0, len(self.weekdays))], weight=1)
         self.month_picker.set(calendar.month_name[self.month])
         self.year_picker.set(str(self.year))
 
+        # init layout
         self.month_picker.grid(row=0, column=0)
         self.year_picker.grid(row=0, column=1)
         self.day_picker.grid(row=1, column=0, columnspan=2, sticky='nsew')

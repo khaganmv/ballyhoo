@@ -5,6 +5,7 @@ class BHTimePicker(ctk.CTkFrame):
     def __init__(self, master, datetime, task, **kwargs):
         super().__init__(master, **kwargs)
         
+        # init self
         self.task = task
         self.date = task.date
         self.time = task.time
@@ -18,6 +19,7 @@ class BHTimePicker(ctk.CTkFrame):
         self.rowconfigure((0, 1, 2), weight=1)
         self.columnconfigure((0, 1, 2), weight=1)
         
+        # init widgets
         self.hour_label = ctk.CTkLabel(
             master=self, 
             text=f'{self.hour:02}', 
@@ -39,6 +41,7 @@ class BHTimePicker(ctk.CTkFrame):
             fg_color='transparent'
         )
         
+        # init bindings
         self.hour_label.bind(
             '<MouseWheel>',
             command=lambda event: self.increment_hour(event)
@@ -48,6 +51,7 @@ class BHTimePicker(ctk.CTkFrame):
             command=lambda event: self.increment_minute(event)
         )
 
+        # init layout
         self.hour_label.grid(row=1, column=0, sticky='nsew')
         self.colon_label.grid(row=1, column=1, sticky='nsew')
         self.minute_label.grid(row=1, column=2, sticky='nsew')

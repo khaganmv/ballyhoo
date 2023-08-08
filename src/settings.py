@@ -1,10 +1,12 @@
 import json
 
+
 class Settings():
     def __init__(self, dir):
         self.dir = dir
         self.appearance_mode, self.width, self.height, \
-        self.show_completed, self.minimize_to_tray, self.run_on_startup = self.read()
+        self.show_completed, self.minimize_to_tray, \
+        self.run_on_startup, self.start_minimized = self.read()
         
     def serialize(self):
         return { 
@@ -13,14 +15,15 @@ class Settings():
             'height': self.height, 
             'show_completed': self.show_completed, 
             'minimize_to_tray': self.minimize_to_tray,
-            'run_on_startup': self.run_on_startup
+            'run_on_startup': self.run_on_startup,
+            'start_minimized': self.start_minimized
         }
 
     def read(self):
         appearance_mode = 'dark'
         width = 600
         height = 500
-        show_completed = minimize_to_tray = run_on_startup = False
+        show_completed = minimize_to_tray = run_on_startup = start_minimized = False
         
         with open(self.dir + 'settings.json', 'a+') as settings_file:
             if settings_file.tell():
@@ -32,8 +35,9 @@ class Settings():
                 show_completed = data['show_completed']
                 minimize_to_tray = data['minimize_to_tray']
                 run_on_startup = data['run_on_startup']
+                start_minimized = data['start_minimized']
         
-        return appearance_mode, width, height, show_completed, minimize_to_tray, run_on_startup
+        return appearance_mode, width, height, show_completed, minimize_to_tray, run_on_startup, start_minimized
     
     def write(self):
         with open(self.dir + 'settings.json', 'w') as settings_file:

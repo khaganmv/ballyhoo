@@ -9,16 +9,19 @@ class DateTimePicker(ctk.CTkToplevel):
     def __init__(self, master, task, **kwargs):
         super().__init__(master, **kwargs)
         
-        self.title('DateTime Picker')
-        self.geometry('500x400')
-        
-        self.rowconfigure(0, weight=1)
-        self.columnconfigure(0, weight=1)
-        
+        # init self
         self.task = task
         self.datetime = datetime.now()
         self.font = ctk.CTkFont('fixedsys', 12)
         
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        
+        # init appearance
+        self.title('DateTime Picker')
+        self.geometry('500x400')
+        
+        # init widgets
         self.datetime_tabview = ctk.CTkTabview(master=self)
         self.datetime_tabview._segmented_button.configure(font=self.font)
         self.date_tab = self.datetime_tabview.add('Date')
@@ -48,6 +51,7 @@ class DateTimePicker(ctk.CTkToplevel):
             fg_color='transparent'
         )
         
+        # init layout
         self.datetime_tabview.grid(row=0, column=0, padx=20, pady=20, sticky='nsew')
         self.date_picker.grid(row=0, column=0, padx=20, pady=(5, 0), sticky='nsew')
         self.time_picker.grid(row=0, column=0, padx=20, pady=20, sticky='nsew')

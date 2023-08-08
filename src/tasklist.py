@@ -103,7 +103,8 @@ class TaskList(ctk.CTkScrollableFrame):
         task.datetime_button.grid(row=rowid, column=3)
         task.remove_button.grid(row=rowid, column=4)
         
-        if task.datetime_label:            
+        if task.datetime_label:
+            task.update_datetime_label()
             task.datetime_label.grid(row=rowid, column=2, padx=4)
             
     def update_task_list(self):
