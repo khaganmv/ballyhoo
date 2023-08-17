@@ -124,15 +124,18 @@ class Ballyhoo(ctk.CTk):
             self.settings.height = event.height
             self.settings.write()
 
-    def open_settings_menu(self):
-        if self.on_settings_menu:
+    def open_settings_menu(self, button=True):
+        if self.on_settings_menu or not button:
             self.settings_menu.grid_forget()
             self.task_list.grid(row=0, column=0, columnspan=2, padx=20, pady=(10, 0), sticky='nsew')
         else:
             self.task_list.grid_forget()
             self.settings_menu.grid(row=0, column=0, columnspan=2, padx=20, pady=(10, 0), sticky='new')
-            
-        self.on_settings_menu = not self.on_settings_menu
+        
+        if button:
+            self.on_settings_menu = not self.on_settings_menu
+        else:
+            self.on_settings_menu = False
 
     def poll_task_list(self):
         self.task_list.update_datetime_labels()
@@ -183,7 +186,7 @@ class Ballyhoo(ctk.CTk):
 
     def withdraw_to_tray(self):
         self.withdraw()
-        self.open_settings_menu()
+        self.open_settings_menu(button=False)
         
         image = Image.open(Util.resource_path('ballyhoo.ico'))
         menu = (pystray.MenuItem('Show', lambda icon, item: self.show(icon)), 
