@@ -24,7 +24,6 @@ class Util():
     def shift_focus_from(src, dst):
         src.selection_clear()
         dst.focus()
-        dst.icursor(ctk.END)
         
     @staticmethod
     def scroll_into_view(canvas, widget):

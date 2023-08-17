@@ -39,8 +39,8 @@ class TaskList(ctk.CTkScrollableFrame):
                         self, 
                         task['completed'], 
                         task['title'],
-                        BHDate.from_str(task['date']) if task['date'] else BHDate(None, None, None),
-                        BHTime.from_str(task['time']) if task['time'] else BHTime(None, None)
+                        BHDate.from_str(task['date']) if task['date'] else BHDate(),
+                        BHTime.from_str(task['time']) if task['time'] else BHTime()
                     ) 
                     for task in data]
                 
@@ -67,7 +67,7 @@ class TaskList(ctk.CTkScrollableFrame):
             self.update_task_list()
             
         self.update_idletasks()
-        Util.scroll_into_view(self.master, task.entry)
+        Util.scroll_into_view(self.master, task.textbox)
         self.write()
     
     def move_task(self, task):
@@ -98,16 +98,17 @@ class TaskList(ctk.CTkScrollableFrame):
         self.write()
     
     def add_to_task_list(self, task, rowid):
-        task.checkbox.grid(row=rowid, column=0)
-        task.entry.grid(row=rowid, column=1, padx=(4, 8), pady=(0, 0), sticky='ew')
-        task.datetime_button.grid(row=rowid, column=3)
-        task.remove_button.grid(row=rowid, column=4)
+        task.checkbox.grid(row=rowid, column=0, pady=2)
+        task.textbox.grid(row=rowid, column=1, padx=(4, 8), pady=2, sticky='ew')
+        task.datetime_button.grid(row=rowid, column=3, pady=2)
+        task.remove_button.grid(row=rowid, column=4, pady=2)
         
         if task.datetime_label:
-            task.update_datetime_label()
-            task.datetime_label.grid(row=rowid, column=2, padx=4)
+            task.datetime_label.grid(row=rowid, column=2, padx=4, pady=2)
             
     def update_task_list(self):
+        self.update()
+        
         for i, task in enumerate(self.active_tasks):
             self.add_to_task_list(task, i)
             
@@ -115,8 +116,27 @@ class TaskList(ctk.CTkScrollableFrame):
             if self.show_completed:
                 self.add_to_task_list(task, i + len(self.active_tasks))
             else:
-                task.grid_forget()
+                task.grid_forget() 
+    
+    def resize_textboxes(self):
+        tasks = self.active_tasks
         
+        if self.show_completed:
+            tasks += self.completed_tasks
+        
+        self.update()
+            
+        for task in tasks:
+            task.resize()
+    
+    def update_datetime_labels(self):
+        tasks = self.active_tasks + self.completed_tasks if self.show_completed else self.active_tasks
+        
+        for task in tasks:
+            if task.datetime_label:
+                if task.is_past():
+                    task.datetime_label.configure(text_color='red')
+    
     def navigate_to_prev(self, task):
         prev_entry = None
         
@@ -124,21 +144,21 @@ class TaskList(ctk.CTkScrollableFrame):
             completed_index = self.completed_tasks.index(task)
             
             if completed_index:
-                prev_entry = self.completed_tasks[completed_index - 1].entry
+                prev_entry = self.completed_tasks[completed_index - 1].textbox
             elif len(self.active_tasks):
-                prev_entry = self.active_tasks[-1].entry
+                prev_entry = self.active_tasks[-1].textbox
             
             if prev_entry:
                 Util.scroll_into_view(self.master, prev_entry)
-                Util.shift_focus_from(task.entry, prev_entry)
+                Util.shift_focus_from(task.textbox, prev_entry)
         else:
             active_index = self.active_tasks.index(task)
             
             if active_index:
-                prev_entry = self.active_tasks[active_index - 1].entry
+                prev_entry = self.active_tasks[active_index - 1].textbox
                 
                 Util.scroll_into_view(self.master, prev_entry)
-                Util.shift_focus_from(task.entry, prev_entry)
+                Util.shift_focus_from(task.textbox, prev_entry)
             
     def navigate_to_next(self, task):
         if task.checkbox.get():
@@ -146,25 +166,25 @@ class TaskList(ctk.CTkScrollableFrame):
                 next_entry = self.input_field
             else:
                 completed_index = self.completed_tasks.index(task)
-                next_entry = self.completed_tasks[completed_index + 1].entry
+                next_entry = self.completed_tasks[completed_index + 1].textbox
                 
                 Util.scroll_into_view(self.master, next_entry)
                 
-            Util.shift_focus_from(task.entry, next_entry)
+            Util.shift_focus_from(task.textbox, next_entry)
         else:            
             if task == self.active_tasks[-1]:
                 if self.show_completed and len(self.completed_tasks):
-                    next_entry = self.completed_tasks[0].entry
+                    next_entry = self.completed_tasks[0].textbox
                 else:
                     next_entry = self.input_field
             else:
                 active_index = self.active_tasks.index(task)
-                next_entry = self.active_tasks[active_index + 1].entry
+                next_entry = self.active_tasks[active_index + 1].textbox
             
             if next_entry != self.input_field:
                 Util.scroll_into_view(self.master, next_entry)
             
-            Util.shift_focus_from(task.entry, next_entry)
+            Util.shift_focus_from(task.textbox, next_entry)
             
     def bind_mousewheel(self):
         canvas = self.master

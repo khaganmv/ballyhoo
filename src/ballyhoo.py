@@ -91,6 +91,8 @@ class Ballyhoo(ctk.CTk):
         self.settings_button.grid(row=1, column=1, padx=(10, 15), pady=(10, 20))
         
         self.update_idletasks()
+        self.task_list.update_task_list()
+        self.task_list.resize_textboxes()
         self.navigate_to_task_list()
         self.poll_task_list()
         self.input_field.focus()
@@ -106,9 +108,9 @@ class Ballyhoo(ctk.CTk):
         entry = None
         
         if self.settings.show_completed and len(self.task_list.completed_tasks):
-            entry = self.task_list.completed_tasks[-1].entry
+            entry = self.task_list.completed_tasks[-1].textbox
         elif len(self.task_list.active_tasks):
-            entry = self.task_list.active_tasks[-1].entry
+            entry = self.task_list.active_tasks[-1].textbox
         
         if entry:
             Util.scroll_into_view(self.task_list.master, entry)
@@ -133,8 +135,8 @@ class Ballyhoo(ctk.CTk):
         self.on_settings_menu = not self.on_settings_menu
 
     def poll_task_list(self):
-        self.task_list.update_task_list()
-        self.after(30000, self.poll_task_list)
+        self.task_list.update_datetime_labels()
+        self.after(1000, self.poll_task_list)
 
     def show_completed(self):
         self.settings.show_completed = self.settings_menu.show_completed_switch.get()
