@@ -34,12 +34,6 @@ class Ballyhoo(ctk.CTk):
         )
         self.on_settings_menu = False
         
-        if self.settings.minimize_to_tray:
-            self.protocol('WM_DELETE_WINDOW', self.withdraw_to_tray)
-            
-        if self.settings.start_minimized:
-            self.withdraw_to_tray()
-        
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         
@@ -84,6 +78,12 @@ class Ballyhoo(ctk.CTk):
             sequence='<Control-Key-a>', 
             command=lambda event, widget=self.input_field: Util.select_all(widget)
         )
+        
+        if self.settings.minimize_to_tray:
+            self.protocol('WM_DELETE_WINDOW', self.withdraw_to_tray)
+            
+        if self.settings.start_minimized:
+            self.withdraw_to_tray()
         
         # init layout
         self.task_list.grid(row=0, column=0, columnspan=2, padx=20, pady=(10, 0), sticky='nsew')
